@@ -1,82 +1,70 @@
 import os
 import streamlit as st
-from openai import OpenAI
+from huggingface_hub import InferenceClient
 
-# OpenAI client
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY")
-)
-
-# Page settings
 st.set_page_config(
     page_title="AI Research Agent",
-    page_icon="🔎",
-    layout="centered"
+    page_icon="🔎"
 )
 
-# Title
 st.title("🔎 AI Research Agent")
-st.write(
-    "Enter a topic and the agent will research it using web search "
-    "and generate a simple research report."
+st.write("Enter a topic and get a simple AI research report.")
+
+HF_TOKEN = os.getenv("HF_TOKEN")
+
+client = InferenceClient(
+    provider="hf-inference",
+    api_key=HF_TOKEN
 )
 
-# Topic input
 topic = st.text_input(
     "Enter your research topic",
     placeholder="e.g. Reinforcement Learning"
 )
 
-# Research button
 if st.button("🔍 Start Research"):
 
     if not topic:
-        st.warning("Please enter a research topic.")
+        st.warning("Please enter a topic.")
         st.stop()
 
-    with st.spinner("Researching the topic..."):
+    with st.spinner("Researching..."):
 
         try:
-            response = client.responses.create(
-                model="gpt-5-mini",
-                tools=[
-                    {
-                        "type": "web_search_preview"
-                    }
-                ],
-                input=f"""
-You are an AI research assistant.
+            prompt = f"""
+You are a helpful research assistant.
 
-Research the following topic using web search:
+Research topic: {topic}
 
-Topic: {topic}
-
-Create a clear and beginner-friendly research report.
-
-Include:
+Write a beginner-friendly research report with:
 
 1. Introduction
 2. Definition
 3. Main concepts
 4. Important facts
-5. Real-life applications
+5. Real-life examples
 6. Advantages
 7. Limitations
 8. Conclusion
-9. Sources
 
-Use reliable and relevant sources.
-Do not make up facts.
-Keep the explanation simple and easy to understand.
+Use simple English.
 """
+
+            result = client.chat_completion(
+                model="Qwen/Qwen2.5-72B-Instruct",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                max_tokens=1200
             )
 
             st.success("Research completed!")
-
             st.subheader("📄 Research Report")
-
-            st.write(response.output_text)
+            st.write(result.choices[0].message.content)
 
         except Exception as e:
             st.error("Something went wrong.")
-            st.code(str(e))
+            st.write(str(e))
