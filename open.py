@@ -10,21 +10,17 @@ st.set_page_config(
 st.title("🔎 AI Research Agent")
 st.write("Enter a topic and get a simple AI research report.")
 
-# Hugging Face Token
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 client = InferenceClient(
-    provider="auto",
     api_key=HF_TOKEN
 )
 
-# Topic input
 topic = st.text_input(
     "Enter your research topic",
-    placeholder="e.g. Reinforcement Learning"
+    placeholder="e.g. Artificial Intelligence"
 )
 
-# Research button
 if st.button("🔍 Start Research"):
 
     if not topic:
@@ -34,13 +30,12 @@ if st.button("🔍 Start Research"):
     with st.spinner("Researching..."):
 
         try:
-
             prompt = f"""
 You are a helpful AI research assistant.
 
 Research topic: {topic}
 
-Create a simple and beginner-friendly research report.
+Create a beginner-friendly research report.
 
 Include:
 
@@ -60,7 +55,7 @@ Do not make up information.
 """
 
             result = client.chat_completion(
-                model="Qwen/Qwen2.5-7B-Instruct",
+                model="Qwen/Qwen2.5-7B-Instruct-1M",
                 messages=[
                     {
                         "role": "user",
@@ -79,6 +74,5 @@ Do not make up information.
             )
 
         except Exception as e:
-
             st.error("Something went wrong.")
             st.code(str(e))
