@@ -1,25 +1,82 @@
 import os
+import streamlit as st
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-topic = input("Enter your research topic: ")
-
-response = client.responses.create(
-    model="gpt-5-mini",
-    input=f"""
-    Research the following topic and explain it in simple language:
-
-    Topic: {topic}
-
-    Give me:
-    1. Introduction
-    2. Main points
-    3. Important facts
-    4. Real-life examples
-    5. Conclusion
-    """
+# OpenAI client
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
 )
 
-print("\n===== RESEARCH REPORT =====\n")
-print(response.output_text)
+# Page settings
+st.set_page_config(
+    page_title="AI Research Agent",
+    page_icon="🔎",
+    layout="centered"
+)
+
+# Title
+st.title("🔎 AI Research Agent")
+st.write(
+    "Enter a topic and the agent will research it using web search "
+    "and generate a simple research report."
+)
+
+# Topic input
+topic = st.text_input(
+    "Enter your research topic",
+    placeholder="e.g. Reinforcement Learning"
+)
+
+# Research button
+if st.button("🔍 Start Research"):
+
+    if not topic:
+        st.warning("Please enter a research topic.")
+        st.stop()
+
+    with st.spinner("Researching the topic..."):
+
+        try:
+            response = client.responses.create(
+                model="gpt-5-mini",
+                tools=[
+                    {
+                        "type": "web_search_preview"
+                    }
+                ],
+                input=f"""
+You are an AI research assistant.
+
+Research the following topic using web search:
+
+Topic: {topic}
+
+Create a clear and beginner-friendly research report.
+
+Include:
+
+1. Introduction
+2. Definition
+3. Main concepts
+4. Important facts
+5. Real-life applications
+6. Advantages
+7. Limitations
+8. Conclusion
+9. Sources
+
+Use reliable and relevant sources.
+Do not make up facts.
+Keep the explanation simple and easy to understand.
+"""
+            )
+
+            st.success("Research completed!")
+
+            st.subheader("📄 Research Report")
+
+            st.write(response.output_text)
+
+        except Exception as e:
+            st.error("Something went wrong.")
+            st.code(str(e))
