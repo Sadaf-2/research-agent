@@ -2,59 +2,33 @@ import os
 import streamlit as st
 from huggingface_hub import InferenceClient
 
-
-# -----------------------------
-# Page Settings
-# -----------------------------
-
 st.set_page_config(
     page_title="AI Research Agent",
-    page_icon="🔎",
-    layout="centered"
+    page_icon="🔎"
 )
-
-
-# -----------------------------
-# App Title
-# -----------------------------
 
 st.title("🔎 AI Research Agent")
+st.write("Enter a topic and get a simple AI research report.")
 
-st.write(
-    "Enter a topic and get a simple AI-generated research report."
-)
-
-
-# -----------------------------
-# Hugging Face API
-# -----------------------------
-
+# Hugging Face Token
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 client = InferenceClient(
-    provider="hf-inference",
+    provider="auto",
     api_key=HF_TOKEN
 )
 
-
-# -----------------------------
-# User Input
-# -----------------------------
-
+# Topic input
 topic = st.text_input(
     "Enter your research topic",
     placeholder="e.g. Reinforcement Learning"
 )
 
-
-# -----------------------------
-# Research Button
-# -----------------------------
-
+# Research button
 if st.button("🔍 Start Research"):
 
     if not topic:
-        st.warning("Please enter a research topic.")
+        st.warning("Please enter a topic.")
         st.stop()
 
     with st.spinner("Researching..."):
@@ -64,12 +38,11 @@ if st.button("🔍 Start Research"):
             prompt = f"""
 You are a helpful AI research assistant.
 
-Research topic:
-{topic}
+Research topic: {topic}
 
-Create a beginner-friendly research report.
+Create a simple and beginner-friendly research report.
 
-Include the following sections:
+Include:
 
 1. Introduction
 2. Definition
@@ -81,17 +54,13 @@ Include the following sections:
 8. Conclusion
 
 Use simple English.
-Explain difficult concepts in an easy way.
-Use clear headings and bullet points where useful.
+Use clear headings.
+Use bullet points where useful.
 Do not make up information.
 """
 
-            # -----------------------------
-            # AI Model
-            # -----------------------------
-
             result = client.chat_completion(
-                model="HuggingFaceH4/zephyr-7b-beta",
+                model="Qwen/Qwen2.5-7B-Instruct",
                 messages=[
                     {
                         "role": "user",
@@ -100,10 +69,6 @@ Do not make up information.
                 ],
                 max_tokens=1200
             )
-
-            # -----------------------------
-            # Show Result
-            # -----------------------------
 
             st.success("Research completed!")
 
@@ -116,5 +81,4 @@ Do not make up information.
         except Exception as e:
 
             st.error("Something went wrong.")
-
             st.code(str(e))
